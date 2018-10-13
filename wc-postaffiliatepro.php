@@ -109,22 +109,27 @@ class WC_Post_Affiliate_Pro {
    */
   public function track_sale($order_id) {
     if ( get_post_meta( $order_id, '_pap_sale_tracked', true ) !== 'true' ) {
-      $saleTracker = new Pap_Api_SaleTracker(WC_Post_Affiliate_Pro_Integration::base_url() . 'scripts/sale.php');
-      $saleTracker->setAccountId('default1');
-      if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
-        $saleTracker->setIp($_SERVER["HTTP_CF_CONNECTING_IP"]);
+      $visitor_id = get_post_meta( $order_id, '_pap_visitor_id', true );
+      if ($visitor_id) {
+        $saleTracker = new Pap_Api_SaleTracker(WC_Post_Affiliate_Pro_Integration::base_url() . 'scripts/sale.php');
+        $saleTracker->setAccountId('default1');
+        $saleTracker->setVisitorId($visitor_id);
+        if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
+          $saleTracker->setIp($_SERVER["HTTP_CF_CONNECTING_IP"]);
+        }
+        $order = new WC_Order( $order_id );
+        $sales = array();
+        foreach ( $order->get_items() as $item_key => $item ) {
+          $sales[$item_key] = $saleTracker->createSale();
+          $sales[$item_key]->setTotalCost($item['line_total']);
+          $sales[$item_key]->setOrderID("$order_id-$item_key");
+          $product = $order->get_product_from_item( $item );
+          // TODO: do something with products that don't have SKUs
+          $sales[$item_key]->setProductID($product->get_sku());
+        }
+        $saleTracker->register();
+        update_post_meta( $order_id, '_pap_sale_tracked', 'true' );
       }
-      $order = new WC_Order( $order_id );
-      $sales = array();
-      foreach ( $order->get_items() as $item_key => $item ) {
-        $sales[$item_key] = $saleTracker->createSale();
-        $sales[$item_key]->setTotalCost($item['line_total']);
-        $sales[$item_key]->setOrderID("$order_id-$item_key");
-        $product = $order->get_product_from_item( $item );
-        // TODO: do something with products that don't have SKUs
-        $sales[$item_key]->setProductID($product->get_sku());
-      }
-      $saleTracker->register();
     }
   }
 }
