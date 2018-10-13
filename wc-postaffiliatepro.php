@@ -43,8 +43,12 @@ class WC_Post_Affiliate_Pro {
       add_filter( 'script_loader_tag', array( $this, 'add_id_to_js' ), 10, 3 );
 
       // Adds custom field behavior for storing visitor id
-      add_action( 'woocommerce_after_order_notes', 'print_visistor_id_field' );
-      add_action( 'woocommerce_checkout_update_order_meta', 'save_visitor_id' );
+      add_action( 'woocommerce_after_order_notes', array( $this, 'print_visistor_id_field' ) );
+      add_action( 'woocommerce_checkout_update_order_meta', array( $this, 'save_visitor_id' ) );
+
+      // Record the sale
+      add_action( 'woocommerce_payment_complete', array( $this, 'track_sale' ));
+      add_action( 'woocommerce_order_status_pending_to_processing', array( $this, 'track_sale' ));
     }
   }
   /**
@@ -97,6 +101,30 @@ class WC_Post_Affiliate_Pro {
   public function save_visitor_id($order_id) {
     if ( ! empty( $_POST['pap_visitor_id'] ) ) {
       update_post_meta( $order_id, '_pap_visitor_id', sanitize_text_field( $_POST['pap_visitor_id'] ) );
+    }
+  }
+
+  /**
+   * Register the sale
+   */
+  public function track_sale($order_id) {
+    if ( get_post_meta( $order_id, '_pap_sale_tracked', true ) !== 'true' ) {
+      $saleTracker = new Pap_Api_SaleTracker(WC_Post_Affiliate_Pro_Integration::base_url() . 'scripts/sale.php');
+      $saleTracker->setAccountId('default1');
+      if (isset($_SERVER["HTTP_CF_CONNECTING_IP"])) {
+        $saleTracker->setIp($_SERVER["HTTP_CF_CONNECTING_IP"]);
+      }
+      $order = new WC_Order( $order_id );
+      $sales = array();
+      foreach ( $order->get_items() as $item_key => $item ) {
+        $sales[$item_key] = $saleTracker->createSale();
+        $sales[$item_key]->setTotalCost($item['line_total']);
+        $sales[$item_key]->setOrderID("$order_id-$item_key");
+        $product = $order->get_product_from_item( $item );
+        // TODO: do something with products that don't have SKUs
+        $sales[$item_key]->setProductID($product->get_sku());
+      }
+      $saleTracker->register();
     }
   }
 }

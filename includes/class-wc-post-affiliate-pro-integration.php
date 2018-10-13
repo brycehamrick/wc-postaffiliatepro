@@ -63,14 +63,16 @@ class WC_Post_Affiliate_Pro_Integration extends WC_Integration {
     $post_data = $this->get_post_data();
     error_log(var_export($post_data, true));
   }
-  /**
-   * Construct the track js url
-   */
-  public function track_url() {
+  public function base_url() {
     $url = self::get_option('pap_url');
     if (substr($url, -1) != '/') {
       $url .= '/';
     }
-    return $url . 'scripts/trackjs.js';
+  }
+  /**
+   * Construct the track js url
+   */
+  public function track_url() {
+    return $this->base_url() . 'scripts/trackjs.js';
   }
 }
