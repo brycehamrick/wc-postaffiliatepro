@@ -64,10 +64,11 @@ class WC_Post_Affiliate_Pro_Integration extends WC_Integration {
     error_log(var_export($post_data, true));
   }
   public function base_url() {
-    $url = self::get_option('pap_url');
+    $url = $this->pap_url;
     if (substr($url, -1) != '/') {
       $url .= '/';
     }
+    return $url;
   }
   /**
    * Construct the track js url
