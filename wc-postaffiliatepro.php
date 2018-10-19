@@ -122,8 +122,8 @@ class WC_Post_Affiliate_Pro {
       $visitor_id = get_post_meta( $order_id, '_pap_visitor_id', true );
       // Add support for 1 Click Upsells by WooCurve
       if (empty($visitor_id)) {
-        $1cu_parent_order_id = get_post_meta( $order_id, '1cu_parent_order_id', true );
-        $visitor_id = get_post_meta( $1cu_parent_order_id, '_pap_visitor_id', true );
+        $ocu_parent_order_id = get_post_meta( $order_id, '1cu_parent_order_id', true );
+        $visitor_id = get_post_meta( $ocu_parent_order_id, '_pap_visitor_id', true );
       }
       if (!empty($visitor_id)) {
         $saleTracker = new Pap_Api_SaleTracker($this->integration->base_url() . 'scripts/sale.php');
