@@ -49,7 +49,7 @@ class WC_Post_Affiliate_Pro_Integration extends WC_Integration {
       ),
       'pap_merchant_pass' => array(
         'title'             => __( 'Merchant Password', $this->id ),
-        'type'              => 'text',
+        'type'              => 'password',
         'description'       => __( 'Enter the password you use to log in to your merchant account.', $this->id ),
         'desc_tip'          => true,
         'default'           => ''

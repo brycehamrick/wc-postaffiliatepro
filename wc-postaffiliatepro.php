@@ -4,7 +4,7 @@
  * Plugin URI: https://bhamrick.com/
  * Description: A better system for integrating WooCommerce with Post Affiliate Pro
  * Author: Bryce Hamrick
- * Version: 0.0.1
+ * Version: 0.0.2
  * Author URI: https://bhamrick.com/
  * License: GPL2
  * Text Domain: wc-postaffiliatepro
@@ -79,6 +79,7 @@ class WC_Post_Affiliate_Pro {
    */
   public function load_js() {
     wp_enqueue_script( $this->id, $this->integration->track_url(), array(), false, true );
+    // TODO: Only run writeCookieToCustomField on checkout
     wp_add_inline_script( $this->id, 'PostAffTracker.setAccountId("default1"); try { PostAffTracker.track(); PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false); } catch (err) { }' );
   }
   /**
@@ -99,9 +100,7 @@ class WC_Post_Affiliate_Pro {
    * Output the hidden field for storing visitor id
    */
   public function print_visistor_id_field($checkout) {
-    echo '<div id="user_link_hidden_checkout_field">
-            <input type="hidden" class="input-hidden" name="pap_visitor_id" id="pap_visitor_id" value="">
-    </div>';
+    echo '<input type="hidden" class="input-hidden" name="pap_visitor_id" id="pap_visitor_id" value="">';
   }
   /**
    * Saves the visitor id to order meta
@@ -121,7 +120,12 @@ class WC_Post_Affiliate_Pro {
   public function track_sale($order_id) {
     if ( get_post_meta( $order_id, '_pap_sale_tracked', true ) !== 'true' ) {
       $visitor_id = get_post_meta( $order_id, '_pap_visitor_id', true );
-      if ($visitor_id) {
+      // Add support for 1 Click Upsells by WooCurve
+      if (empty($visitor_id)) {
+        $1cu_parent_order_id = get_post_meta( $order_id, '1cu_parent_order_id', true );
+        $visitor_id = get_post_meta( $1cu_parent_order_id, '_pap_visitor_id', true );
+      }
+      if (!empty($visitor_id)) {
         $saleTracker = new Pap_Api_SaleTracker($this->integration->base_url() . 'scripts/sale.php');
         $saleTracker->setAccountId('default1');
         $saleTracker->setVisitorId($visitor_id);
