@@ -4,7 +4,7 @@
  * Plugin URI: https://bhamrick.com/
  * Description: A better system for integrating WooCommerce with Post Affiliate Pro
  * Author: Bryce Hamrick
- * Version: 0.0.2
+ * Version: 0.0.3
  * Author URI: https://bhamrick.com/
  * License: GPL2
  * Text Domain: wc-postaffiliatepro

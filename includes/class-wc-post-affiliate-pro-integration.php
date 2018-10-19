@@ -24,8 +24,7 @@ class WC_Post_Affiliate_Pro_Integration extends WC_Integration {
     $this->pap_merchant_user  = $this->get_option( 'pap_merchant_user' );
     $this->pap_merchant_pass  = $this->get_option( 'pap_merchant_pass' );
     // Actions.
-    // TODO: enable this action to validate API access and hash the script
-    // add_action( 'woocommerce_update_options_integration_' .  $this->id, array( $this, 'process_api_session' ), 5 );
+    add_action( 'woocommerce_update_options_integration_' .  $this->id, array( $this, 'process_api_session' ), 5 );
     add_action( 'woocommerce_update_options_integration_' .  $this->id, array( $this, 'process_admin_options' ), 20 );
   }
   /**
@@ -60,8 +59,28 @@ class WC_Post_Affiliate_Pro_Integration extends WC_Integration {
    * Validate API credentials and save session output
    */
   public function process_api_session() {
+    $this->init_settings();
     $post_data = $this->get_post_data();
-    error_log(var_export($post_data, true));
+
+    $session = new Gpf_Api_Session($this->base_url() . 'scripts/server.php');
+    try {
+        $login = @$session->login($post_data['pap_merchant_user'], $post_data['pap_merchant_pass']);
+        // enable hashing if available
+        $request = new Gpf_Rpc_DataRequest('Pap_Merchants_Tools_IntegrationMethods', 'getHashScriptNameParams', $session);
+
+        try {
+            $request->sendNow();
+            $data = $request->getData();
+            update_option('pap_script_hash', $data->getValue('hashTrackingScriptsValue'));
+        }
+        catch(Exception $e) {
+            $this->add_error("API call error for 'getHashScriptNameParams': ".$e->getMessage());
+            update_option('pap_script_hash', '0');
+        }
+
+    } catch (Gpf_Api_IncompatibleVersionException $e) {
+        $this->add_error('Unable to login into PAP installation because of icompatible versions (probably your API file here in WP installation is older than your PAP installation)');
+    }
   }
   public function base_url() {
     $url = $this->pap_url;
@@ -74,6 +93,11 @@ class WC_Post_Affiliate_Pro_Integration extends WC_Integration {
    * Construct the track js url
    */
   public function track_url() {
-    return $this->base_url() . 'scripts/trackjs.js';
+    $tracker = 'trackjs.js';
+    $hashed = get_option('pap_script_hash', '0');
+    if ($hashed !== '0') {
+      $tracker = $hashed;
+    }
+    return $this->base_url() . 'scripts/' . $tracker;
   }
 }
