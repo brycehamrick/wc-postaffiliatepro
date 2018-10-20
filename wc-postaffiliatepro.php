@@ -4,7 +4,7 @@
  * Plugin URI: https://bhamrick.com/
  * Description: A better system for integrating WooCommerce with Post Affiliate Pro
  * Author: Bryce Hamrick
- * Version: 0.0.3
+ * Version: 0.0.4
  * Author URI: https://bhamrick.com/
  * License: GPL2
  * Text Domain: wc-postaffiliatepro
@@ -79,8 +79,9 @@ class WC_Post_Affiliate_Pro {
    */
   public function load_js() {
     wp_enqueue_script( $this->id, $this->integration->track_url(), array(), false, true );
-    // TODO: Only run writeCookieToCustomField on checkout
-    wp_add_inline_script( $this->id, 'PostAffTracker.setAccountId("default1"); try { PostAffTracker.track(); PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false); } catch (err) { }' );
+    $checkout_script = (is_checkout()) ? 'PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false);' : '';
+    $track_script = 'PostAffTracker.setAccountId("default1"); try { PostAffTracker.track(); ' . $checkout_script . ' } catch (err) { }';
+    wp_add_inline_script( $this->id, $track_script );
   }
   /**
    * Adds an ID to the script tag
@@ -144,8 +145,11 @@ class WC_Post_Affiliate_Pro {
           // OrderID must be unique, append the item key for each line item.
           $sales[$item_key]->setOrderID("$order_id-$item_key");
           $product = $order->get_product_from_item( $item );
-          // TODO: do something with products that don't have SKUs
-          $sales[$item_key]->setProductID($product->get_sku());
+          $product_key = $product->get_sku();
+          if (empty($product_key)) {
+            $product_key = $product->get_id();
+          }
+          $sales[$item_key]->setProductID($product_key);
         }
         $saleTracker->register();
         update_post_meta( $order_id, '_pap_sale_tracked', 'true' );
