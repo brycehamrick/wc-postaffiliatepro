@@ -79,7 +79,7 @@ class WC_Post_Affiliate_Pro {
    */
   public function load_js() {
     wp_enqueue_script( $this->id, $this->integration->track_url(), array(), false, true );
-    $checkout_script = (is_checkout()) ? 'PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false);' : '';
+    $checkout_script = (is_checkout()) ? 'PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false); PostAffTracker.writeAffiliateToCustomField("pap_affiliate_id");' : '';
     $track_script = 'PostAffTracker.setAccountId("default1"); try { PostAffTracker.track(); ' . $checkout_script . ' } catch (err) { }';
     wp_add_inline_script( $this->id, $track_script );
   }
@@ -101,7 +101,7 @@ class WC_Post_Affiliate_Pro {
    * Output the hidden field for storing visitor id
    */
   public function print_visistor_id_field($checkout) {
-    echo '<input type="hidden" class="input-hidden" name="pap_visitor_id" id="pap_visitor_id" value="">';
+    echo '<input type="hidden" class="input-hidden" name="pap_visitor_id" id="pap_visitor_id" value=""><input type="hidden" class="input-hidden" name="pap_affiliate_id" id="pap_affiliate_id" value="">';
   }
   /**
    * Saves the visitor id to order meta
@@ -109,6 +109,9 @@ class WC_Post_Affiliate_Pro {
   public function save_visitor_id($order_id) {
     if ( ! empty( $_POST['pap_visitor_id'] ) ) {
       update_post_meta( $order_id, '_pap_visitor_id', sanitize_text_field( $_POST['pap_visitor_id'] ) );
+    }
+    if ( ! empty( $_POST['pap_affiliate_id'] ) ) {
+      update_post_meta( $order_id, '_pap_affiliate_id', sanitize_text_field( $_POST['pap_affiliate_id'] ) );
     }
   }
 
