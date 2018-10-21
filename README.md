@@ -12,5 +12,6 @@ This plugin was built to work with the [One Click Upsells plugin by WooCurve](ht
 
 * Test with a Combined Orders setup. Currently this has only been tested when upsells create new orders.
 * Add support for recurring subscription tracking via WooCommerce Subscriptions.
+* Automatically update commission status of refunded orders
 
 _Use at your own risk. This has only been tested on a handful of sites._
