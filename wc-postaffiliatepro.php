@@ -4,11 +4,11 @@
  * Plugin URI: https://bhamrick.com/
  * Description: A better system for integrating WooCommerce with Post Affiliate Pro
  * Author: Bryce Hamrick
- * Version: 0.0.4
+ * Version: 0.0.5
  * Author URI: https://bhamrick.com/
  * License: GPL2
  * Text Domain: wc-postaffiliatepro
- * WC tested up to: 3.4
+ * WC tested up to: 3.5.4
  * WC requires at least: 3.0
  *
  * @package WC_Post_Affiliate_Pro
@@ -28,6 +28,14 @@ class WC_Post_Affiliate_Pro {
   */
   public function __construct() {
     $this->id = 'wc-postaffiliatepro';
+
+    require 'plugin-update-checker/plugin-update-checker.php';
+    $myUpdateChecker = Puc_v4_Factory::buildUpdateChecker(
+      'https://github.com/brycehamrick/wc-postaffiliatepro/',
+      __FILE__,
+      $this->id
+    );
+
     add_action( 'plugins_loaded', array( $this, 'init' ) );
   }
   /**
@@ -79,7 +87,7 @@ class WC_Post_Affiliate_Pro {
    */
   public function load_js() {
     wp_enqueue_script( $this->id, $this->integration->track_url(), array(), false, true );
-    $checkout_script = (is_checkout()) ? 'PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false); PostAffTracker.writeAffiliateToCustomField("pap_affiliate_id");' : '';
+    $checkout_script = (is_checkout()) ? 'PostAffTracker.writeCookieToCustomField("pap_visitor_id", null, null, false);' : '';
     $track_script = 'PostAffTracker.setAccountId("default1"); try { PostAffTracker.track(); ' . $checkout_script . ' } catch (err) { }';
     wp_add_inline_script( $this->id, $track_script );
   }
@@ -101,7 +109,7 @@ class WC_Post_Affiliate_Pro {
    * Output the hidden field for storing visitor id
    */
   public function print_visistor_id_field($checkout) {
-    echo '<input type="hidden" class="input-hidden" name="pap_visitor_id" id="pap_visitor_id" value=""><input type="hidden" class="input-hidden" name="pap_affiliate_id" id="pap_affiliate_id" value="">';
+    echo '<input type="hidden" class="input-hidden" name="pap_visitor_id" id="pap_visitor_id" value="">';
   }
   /**
    * Saves the visitor id to order meta
@@ -109,9 +117,6 @@ class WC_Post_Affiliate_Pro {
   public function save_visitor_id($order_id) {
     if ( ! empty( $_POST['pap_visitor_id'] ) ) {
       update_post_meta( $order_id, '_pap_visitor_id', sanitize_text_field( $_POST['pap_visitor_id'] ) );
-    }
-    if ( ! empty( $_POST['pap_affiliate_id'] ) ) {
-      update_post_meta( $order_id, '_pap_affiliate_id', sanitize_text_field( $_POST['pap_affiliate_id'] ) );
     }
   }
 
