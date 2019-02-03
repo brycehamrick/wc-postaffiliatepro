@@ -8,6 +8,8 @@ The official plugin relies on sale tracking code being printed on the WooCommerc
 
 This plugin was built to work with the [One Click Upsells plugin by WooCurve](https://woocurve.com/one-click-upsells-for-woocommerce/). It will track both the initial sale as well as any upsells, and sales will be tracked even if the user navigates away from the upsell page instead of continuing through the funnel.
 
+This plugin has also been tested to work with [UpStroke by BuildWooFunnels](https://buildwoofunnels.com/woocommerce-one-click-upsells-upstroke/). Upsells must be configured to "Create a New Order" and add `_pap_visitor_id` to the "Meta Keys To Copy From Primary Order" in UpStroke's Global Settings.
+
 ## Future roadmap
 
 * Test with a Combined Orders setup. Currently this has only been tested when upsells create new orders.
